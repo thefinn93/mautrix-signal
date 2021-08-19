@@ -12,7 +12,7 @@ from .rpc import CONNECT_EVENT, SignaldRPCClient
 from .errors import UnexpectedError, UnexpectedResponse
 from .types import (Address, Quote, Attachment, Reaction, Account, Message, DeviceInfo, Group,
                     Profile, GroupID, GetIdentitiesResponse, ListenEvent, ListenAction, GroupV2,
-                    Mention, LinkSession)
+                    Mention, LinkSession, SafetyNumberChange)
 
 T = TypeVar('T')
 EventHandler = Callable[[T], Awaitable[None]]
@@ -31,6 +31,7 @@ class SignaldClient(SignaldRPCClient):
         self.add_rpc_handler("message", self._parse_message)
         self.add_rpc_handler("listen_started", self._parse_listen_start)
         self.add_rpc_handler("listen_stopped", self._parse_listen_stop)
+        self.add_rpc_handler("safety_number_change", self._parse_message)
         self.add_rpc_handler("version", self._log_version)
         self.add_rpc_handler(CONNECT_EVENT, self._resubscribe)
 
@@ -57,6 +58,7 @@ class SignaldClient(SignaldRPCClient):
         event_data = data["data"]
         event_class = {
             "message": Message,
+            "safety_number_change": SafetyNumberChange,
         }[event_type]
         event = event_class.deserialize(event_data)
         await self._run_event_handler(event)

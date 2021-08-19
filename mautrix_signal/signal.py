@@ -18,8 +18,9 @@ import asyncio
 import logging
 
 from mausignald import SignaldClient
-from mausignald.types import (Message, MessageData, Address, TypingNotification, TypingAction,
-                              OwnReadReceipt, Receipt, ReceiptType, ListenEvent)
+from mausignald.types import (Message, MessageData, Address, SafetyNumberChange,
+                              TypingNotification, TypingAction, OwnReadReceipt, Receipt,
+                              ReceiptType, ListenEvent)
 from mautrix.util.logging import TraceLogger
 
 from .db import Message as DBMessage
@@ -43,6 +44,7 @@ class SignalHandler(SignaldClient):
         self.data_dir = bridge.config["signal.data_dir"]
         self.delete_unknown_accounts = bridge.config["signal.delete_unknown_accounts_on_start"]
         self.add_event_handler(Message, self.on_message)
+        self.add_event_handler(SafetyNumberChange, self.on_safety_number_change)
         self.add_event_handler(ListenEvent, self.on_listen)
 
     async def on_message(self, evt: Message) -> None:
@@ -71,6 +73,9 @@ class SignalHandler(SignaldClient):
             if evt.sync_message.groups:
                 self.log.debug("Sync message includes groups meta, syncing groups...")
                 await user.sync_groups()
+
+    async def on_safety_number_change(self, evt: SafetyNumberChange):
+        self.log.info(evt)
 
     @staticmethod
     async def on_listen(evt: ListenEvent) -> None:

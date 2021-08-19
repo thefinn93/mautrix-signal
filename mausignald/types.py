@@ -409,6 +409,10 @@ class Message(SerializableAttrs):
     typing: Optional[TypingNotification] = None
     receipt: Optional[Receipt] = None
 
+@dataclass
+class SafetyNumberChange(SerializableAttrs):
+    identifier: str
+
 
 class ListenAction(SerializableEnum):
     STARTED = "started"

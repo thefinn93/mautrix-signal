@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from mausignald.errors import ExecutionException
 from typing import Union, Dict, Optional, AsyncGenerator, List, TYPE_CHECKING, cast
 from uuid import UUID
 import asyncio
@@ -194,7 +195,10 @@ class User(DBUser, BaseUser):
         self.log.trace("Syncing contact %s", contact)
         if isinstance(contact, Address):
             address = contact
-            profile = await self.bridge.signal.get_profile(self.username, address)
+            try:
+                profile = await self.bridge.signal.get_profile(self.username, address)
+            except ExecutionException as e:
+                self.log.debug(f"(2) ExecutionException: {e}")
             if profile and profile.name:
                 self.log.trace("Got profile for %s: %s", address, profile)
         else:

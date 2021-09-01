@@ -9,7 +9,7 @@ import asyncio
 from mautrix.util.logging import TraceLogger
 
 from .rpc import CONNECT_EVENT, SignaldRPCClient
-from .errors import UnexpectedError, UnexpectedResponse
+from .errors import ExecutionException, UnexpectedError, UnexpectedResponse
 from .types import (Address, Quote, Attachment, Reaction, Account, Message, DeviceInfo, Group,
                     Profile, GroupID, GetIdentitiesResponse, ListenEvent, ListenAction, GroupV2,
                     Mention, LinkSession)
@@ -234,6 +234,9 @@ class SignaldClient(SignaldRPCClient):
         except UnexpectedResponse as e:
             if e.resp_type == "profile_not_available":
                 return None
+            raise
+        except ExecutionException as e:
+            self.log.debug(f"ExecutionException: {e}")
             raise
         return Profile.deserialize(resp)
 

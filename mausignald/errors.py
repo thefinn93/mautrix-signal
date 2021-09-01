@@ -35,6 +35,10 @@ class ResponseError(RPCError):
         super().__init__(msg)
 
 
+class ExecutionException(ResponseError):
+    pass
+
+
 class TimeoutException(ResponseError):
     pass
 
@@ -71,6 +75,7 @@ response_error_types = {
     "UnknownIdentityKey": UnknownIdentityKey,
     "CaptchaRequired": CaptchaRequired,
     "AuthorizationFailedException": AuthorizationFailedException,
+    "ExecutionException": ExecutionException,
     # TODO add rest from https://gitlab.com/signald/signald/-/tree/main/src/main/java/io/finn/signald/exceptions
 }
 

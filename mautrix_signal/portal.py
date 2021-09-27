@@ -249,6 +249,7 @@ class Portal(DBPortal, BasePortal):
 
     async def handle_matrix_message(self, sender: 'u.User', message: MessageEventContent,
                                     event_id: EventID) -> None:
+        self.log.debug(f"Handle matrix message {event_id}")
         if ((message.get(self.bridge.real_user_content_key, False)
              and await p.Puppet.get_by_custom_mxid(sender.mxid))):
             self.log.debug(f"Ignoring puppet-sent message by confirmed puppet user {sender.mxid}")
@@ -257,6 +258,7 @@ class Portal(DBPortal, BasePortal):
         orig_sender = sender
         sender, is_relay = await self._get_relay_sender(sender, f"message {event_id}")
         if not sender:
+            self.log.debug("No sender!")
             return
         elif is_relay:
             await self._apply_msg_format(orig_sender, message)

@@ -18,8 +18,8 @@ from mautrix.util.async_db import Connection
 from . import upgrade_table
 
 
-@upgrade_table.register(description="Initial revision")
-async def upgrade_v1(conn: Connection) -> None:
+@upgrade_table.register(description="Initial revision", upgrades_to=8)
+async def upgrade_latest(conn: Connection) -> None:
     await conn.execute(
         """CREATE TABLE portal (
             chat_id     TEXT,
@@ -27,6 +27,13 @@ async def upgrade_v1(conn: Connection) -> None:
             mxid        TEXT,
             name        TEXT,
             encrypted   BOOLEAN NOT NULL DEFAULT false,
+            avatar_hash TEXT,
+            avatar_url  TEXT,
+            name_set    BOOLEAN NOT NULL DEFAULT false,
+            avatar_set  BOOLEAN NOT NULL DEFAULT false,
+            revision    INTEGER NOT NULL DEFAULT 0,
+            expiration_time BIGINT,
+            relay_user_id   TEXT,
 
             PRIMARY KEY (chat_id, receiver)
         )"""
@@ -41,16 +48,21 @@ async def upgrade_v1(conn: Connection) -> None:
     )
     await conn.execute(
         """CREATE TABLE puppet (
-            uuid      UUID UNIQUE,
-            number    TEXT UNIQUE,
-            name      TEXT,
+            uuid        UUID UNIQUE,
+            number      TEXT UNIQUE,
+            name        TEXT,
+            avatar_hash TEXT,
+            avatar_url  TEXT,
+            name_set    BOOLEAN NOT NULL DEFAULT false,
+            avatar_set  BOOLEAN NOT NULL DEFAULT false,
 
             uuid_registered   BOOLEAN NOT NULL DEFAULT false,
             number_registered BOOLEAN NOT NULL DEFAULT false,
 
             custom_mxid  TEXT,
             access_token TEXT,
-            next_batch   TEXT
+            next_batch   TEXT,
+            base_url     TEXT
         )"""
     )
     await conn.execute(
@@ -68,7 +80,7 @@ async def upgrade_v1(conn: Connection) -> None:
         """CREATE TABLE message (
             mxid    TEXT NOT NULL,
             mx_room TEXT NOT NULL,
-            sender          UUID,
+            sender          TEXT,
             timestamp       BIGINT,
             signal_chat_id  TEXT,
             signal_receiver TEXT,
@@ -86,9 +98,9 @@ async def upgrade_v1(conn: Connection) -> None:
 
             signal_chat_id  TEXT   NOT NULL,
             signal_receiver TEXT   NOT NULL,
-            msg_author      UUID   NOT NULL,
+            msg_author      TEXT   NOT NULL,
             msg_timestamp   BIGINT NOT NULL,
-            author          UUID   NOT NULL,
+            author          TEXT   NOT NULL,
 
             emoji TEXT NOT NULL,
 
@@ -97,5 +109,15 @@ async def upgrade_v1(conn: Connection) -> None:
                 REFERENCES message(sender, timestamp, signal_chat_id, signal_receiver)
                 ON DELETE CASCADE ON UPDATE CASCADE,
             UNIQUE (mxid, mx_room)
+        )"""
+    )
+    await conn.execute(
+        """CREATE TABLE disappearing_message (
+            room_id             TEXT,
+            mxid                TEXT,
+            expiration_seconds  BIGINT,
+            expiration_ts       BIGINT,
+
+            PRIMARY KEY (room_id, mxid)
         )"""
     )

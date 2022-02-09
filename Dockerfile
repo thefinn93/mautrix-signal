@@ -38,7 +38,7 @@ COPY requirements.txt /opt/mautrix-signal/requirements.txt
 COPY optional-requirements.txt /opt/mautrix-signal/optional-requirements.txt
 WORKDIR /opt/mautrix-signal
 RUN apk add --virtual .build-deps python3-dev libffi-dev build-base \
- && pip3 install -r requirements.txt -r optional-requirements.txt \
+ && pip3 install -r requirements.txt -r optional-requirements.txt 'git+https://github.com/mautrix/python.git@47e834937561bcbe4e10838c6d86964b094cfe7e#egg=mautrix' \
  && apk del .build-deps
 
 COPY . /opt/mautrix-signal
